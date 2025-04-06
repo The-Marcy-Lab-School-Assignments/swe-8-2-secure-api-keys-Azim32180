@@ -1,16 +1,18 @@
 //////////////////////////
 // Imports
 //////////////////////////
+const dotenv = require("dotenv");
+dotenv.config();
 
-const path = require('path');
-const express = require('express');
+const express = require("express");
+const path = require("path");
 
 //////////////////////////
 // Constants
 //////////////////////////
 
 const port = 8080;
-const pathToDistFolder = path.join(__dirname, '../frontend/dist');
+const pathToDistFolder = path.join(__dirname, "../frontend/dist");
 const app = express();
 
 //////////////////////////
@@ -19,10 +21,28 @@ const app = express();
 
 const serveStatic = express.static(pathToDistFolder);
 
+// First, we make a controller
+const serveGifs = async (req, res, next) => {
+  const url = `https://api.giphy.com/v1/gifs/trending?limit=3&rating=g&api_key=${process.env.API_KEY}`;
+
+  try {
+    // This is pretty standard fetching logic
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // send the fetched data to the client
+    res.send(data);
+  } catch (error) {
+    // or send an error. 503 means the service is unavailable
+    res.status(503).send(error);
+  }
+};
+
 app.use(serveStatic);
+app.get("/api/gifs", serveGifs);
 
 //////////////////////////
 // Listener
 //////////////////////////
 
-app.listen(port, () => console.log(`listening at http://localhost:${port}`)); 
+app.listen(port, () => console.log(`listening at http://localhost:${port}`));
